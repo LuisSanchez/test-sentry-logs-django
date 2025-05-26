@@ -131,13 +131,15 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ]
 }
 
+SENTRY_DSN = env.str("SENTRY_DSN", default="")
+
 sentry_sdk.init(
-    dsn=env.str("SENTRY_DSN", default=""),
+    dsn=SENTRY_DSN,
     traces_sample_rate=1.0,
     environment="development",
     _experiments={
@@ -146,3 +148,28 @@ sentry_sdk.init(
     },
     send_default_pii=True,
 )
+
+# https://django-q.readthedocs.io/en/latest/configure.html#orm
+# https://django-q2.readthedocs.io/en/master/
+Q_CLUSTER = {
+    "name": "DjangORM",
+    "workers": 2,
+    "retry": 3600,
+    "timeout": 2400,
+    "queue_limit": 8,
+    "bulk": 1,
+    "orm": "default",
+    "save_limit": 0,
+    "ack_failures": True,
+    "max_attempts": 1,
+    "attempt_count": 1,
+    "has_replica": True,
+    "compress": True,
+    "recycle": 50,
+    # This is commented since it seems to cause issues with the Sentry integration
+    "error_reporter": {
+        "sentry": {
+            "dsn": SENTRY_DSN,
+        }
+    },
+}
